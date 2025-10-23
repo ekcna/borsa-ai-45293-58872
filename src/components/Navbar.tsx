@@ -61,7 +61,7 @@ const Navbar = () => {
 
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path === '/') return 'market';
+    if (path === '/' || path === '/market') return 'market';
     if (path === '/pricing') return 'plans';
     if (path === '/wishlist') return 'wishlist';
     if (path === '/notifications') return 'notifications';
@@ -73,7 +73,7 @@ const Navbar = () => {
   const handleTabChange = (value: string) => {
     switch (value) {
       case 'market':
-        navigate('/');
+        navigate('/market');
         break;
       case 'plans':
         navigate('/pricing');
@@ -109,7 +109,7 @@ const Navbar = () => {
               <SheetContent side="left" className="w-64">
                 <div className="flex flex-col gap-4 mt-8">
                   <Link 
-                    to="/" 
+                    to="/market" 
                     onClick={() => setMobileMenuOpen(false)}
                     className={`px-4 py-2 rounded-md transition-colors ${getActiveTab() === 'market' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
                   >
