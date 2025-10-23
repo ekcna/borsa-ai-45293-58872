@@ -61,6 +61,8 @@ const Navbar = () => {
     const path = location.pathname;
     if (path === '/') return 'market';
     if (path === '/pricing') return 'plans';
+    if (path === '/wishlist') return 'wishlist';
+    if (path === '/notifications') return 'notifications';
     if (path === '/settings') return 'settings';
     if (path === '/admin') return 'admin';
     return 'market';
@@ -73,6 +75,12 @@ const Navbar = () => {
         break;
       case 'plans':
         navigate('/pricing');
+        break;
+      case 'wishlist':
+        navigate('/wishlist');
+        break;
+      case 'notifications':
+        navigate('/notifications');
         break;
       case 'settings':
         navigate('/settings');
@@ -101,6 +109,8 @@ const Navbar = () => {
               <TabsList>
                 <TabsTrigger value="market">Market</TabsTrigger>
                 <TabsTrigger value="plans">Plans</TabsTrigger>
+                {user && <TabsTrigger value="wishlist">Wishlist</TabsTrigger>}
+                {user && <TabsTrigger value="notifications">Notifications</TabsTrigger>}
                 {user && <TabsTrigger value="settings">Settings</TabsTrigger>}
                 {isAdmin && <TabsTrigger value="admin">Admin</TabsTrigger>}
               </TabsList>

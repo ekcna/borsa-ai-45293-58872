@@ -19,6 +19,7 @@ import {
   Crown,
 } from "lucide-react";
 import { getStockBySymbol, generateHistoricalData } from "@/data/turkishStocks";
+import StockNews from "@/components/StockNews";
 import {
   LineChart,
   Line,
@@ -428,6 +429,11 @@ const StockDetail = () => {
               )}
             </Card>
           </div>
+        </div>
+
+        {/* Full-width News Section */}
+        <div className="mt-8">
+          <StockNews stockSymbol={stock.symbol} stockName={stock.name} />
         </div>
       </div>
     </div>
