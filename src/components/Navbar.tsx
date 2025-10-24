@@ -59,19 +59,27 @@ const Navbar = () => {
 
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path === '/') return 'market';
+    if (path === '/') return 'home';
+    if (path === '/market') return 'market';
+    if (path === '/crypto') return 'crypto';
     if (path === '/pricing') return 'plans';
     if (path === '/wishlist') return 'wishlist';
     if (path === '/notifications') return 'notifications';
     if (path === '/settings') return 'settings';
     if (path === '/admin') return 'admin';
-    return 'market';
+    return 'home';
   };
 
   const handleTabChange = (value: string) => {
     switch (value) {
-      case 'market':
+      case 'home':
         navigate('/');
+        break;
+      case 'market':
+        navigate('/market');
+        break;
+      case 'crypto':
+        navigate('/crypto');
         break;
       case 'plans':
         navigate('/pricing');
@@ -107,7 +115,9 @@ const Navbar = () => {
             {/* Navigation Tabs */}
             <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="hidden md:block">
               <TabsList>
-                <TabsTrigger value="market">Market</TabsTrigger>
+                <TabsTrigger value="home">Home</TabsTrigger>
+                <TabsTrigger value="market">Stocks</TabsTrigger>
+                <TabsTrigger value="crypto">Crypto</TabsTrigger>
                 <TabsTrigger value="plans">Plans</TabsTrigger>
                 {user && <TabsTrigger value="wishlist">Wishlist</TabsTrigger>}
                 {user && <TabsTrigger value="notifications">Notifications</TabsTrigger>}
