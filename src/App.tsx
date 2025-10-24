@@ -5,8 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/hooks/useLanguage";
-import Home from "./pages/Home";
-import Market from "./pages/Market";
+import Index from "./pages/Index";
 import StockDetail from "./pages/StockDetail";
 import Auth from "./pages/Auth";
 import Pricing from "./pages/Pricing";
@@ -27,8 +26,7 @@ const App = () => (
         <LanguageProvider>
           <AuthProvider>
             <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/market" element={<Market />} />
+            <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/admin" element={<Admin />} />

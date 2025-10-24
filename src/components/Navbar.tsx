@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, User, LogOut, Languages, Settings, Menu } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Search, Sparkles, User, LogOut, Languages, Settings } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -32,7 +31,6 @@ import { useAdmin } from "@/hooks/useAdmin";
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userPlan, signOut } = useAuth();
@@ -61,7 +59,7 @@ const Navbar = () => {
 
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path === '/' || path === '/market') return 'market';
+    if (path === '/') return 'market';
     if (path === '/pricing') return 'plans';
     if (path === '/wishlist') return 'wishlist';
     if (path === '/notifications') return 'notifications';
@@ -73,7 +71,7 @@ const Navbar = () => {
   const handleTabChange = (value: string) => {
     switch (value) {
       case 'market':
-        navigate('/market');
+        navigate('/');
         break;
       case 'plans':
         navigate('/pricing');
@@ -97,78 +95,17 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center gap-4">
-          {/* Logo and Mobile Menu on the left */}
-          <div className="flex items-center gap-2">
-            {/* Mobile Menu */}
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-64">
-                <div className="flex flex-col gap-4 mt-8">
-                  <Link 
-                    to="/market" 
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`px-4 py-2 rounded-md transition-colors ${getActiveTab() === 'market' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
-                  >
-                    Market
-                  </Link>
-                  <Link 
-                    to="/pricing" 
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`px-4 py-2 rounded-md transition-colors ${getActiveTab() === 'plans' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
-                  >
-                    Plans
-                  </Link>
-                  {user && (
-                    <>
-                      <Link 
-                        to="/wishlist" 
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`px-4 py-2 rounded-md transition-colors ${getActiveTab() === 'wishlist' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
-                      >
-                        Wishlist
-                      </Link>
-                      <Link 
-                        to="/notifications" 
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`px-4 py-2 rounded-md transition-colors ${getActiveTab() === 'notifications' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
-                      >
-                        Notifications
-                      </Link>
-                      <Link 
-                        to="/settings" 
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`px-4 py-2 rounded-md transition-colors ${getActiveTab() === 'settings' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
-                      >
-                        Settings
-                      </Link>
-                    </>
-                  )}
-                  {isAdmin && (
-                    <Link 
-                      to="/admin" 
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`px-4 py-2 rounded-md transition-colors ${getActiveTab() === 'admin' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
-                    >
-                      Admin
-                    </Link>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
-
+          {/* Logo and Tabs on the left */}
+          <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-gradient-hero flex items-center justify-center">
                 <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="font-bold text-lg text-foreground hidden sm:inline">{t("appName")}</span>
+              <span className="font-bold text-lg text-foreground">{t("appName")}</span>
             </Link>
 
-            {/* Navigation Tabs - Desktop Only */}
-            <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="hidden md:block ml-4">
+            {/* Navigation Tabs */}
+            <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="hidden md:block">
               <TabsList>
                 <TabsTrigger value="market">Market</TabsTrigger>
                 <TabsTrigger value="plans">Plans</TabsTrigger>
@@ -184,10 +121,10 @@ const Navbar = () => {
 
           {/* Right side menu items */}
           <div className="flex items-center gap-3">
-            {/* Search Bar - Hidden on small screens */}
+            {/* Search Bar */}
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
-                <div className="relative w-48 lg:w-64 hidden sm:block">
+                <div className="relative w-64">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder={t("searchPlaceholder")}

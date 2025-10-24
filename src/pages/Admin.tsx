@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import Navbar from '@/components/Navbar';
 import { toast } from 'sonner';
-import { Check, X, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, X, Loader2 } from 'lucide-react';
 
 interface PaymentRequest {
   id: string;
@@ -27,8 +27,6 @@ const Admin = () => {
   const [requests, setRequests] = useState<PaymentRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
   useEffect(() => {
     if (!adminLoading && !isAdmin) {
@@ -46,38 +44,8 @@ const Admin = () => {
 
       if (error) throw error;
 
-      // Auto-delete oldest 10 requests if total reaches 100
-      if (data && data.length >= 100) {
-        const oldestRequests = data.slice(-10).map(req => req.id);
-        await supabase
-          .from('payment_requests')
-          .delete()
-          .in('id', oldestRequests);
-        
-        toast.info('Auto-cleaned 10 oldest requests (limit reached)');
-        // Re-fetch after deletion
-        const { data: updatedData } = await supabase
-          .from('payment_requests')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (updatedData) {
-          const userIds = updatedData.map(req => req.user_id);
-          const { data: profiles } = await supabase
-            .from('profiles')
-            .select('id, email, full_name')
-            .in('id', userIds);
-
-          const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
-          
-          const requestsWithProfiles = updatedData.map(req => ({
-            ...req,
-            profiles: profilesMap.get(req.user_id) || { email: 'Unknown', full_name: 'Unknown' }
-          }));
-
-          setRequests(requestsWithProfiles as any);
-        }
-      } else if (data && data.length > 0) {
+      // Fetch user details separately
+      if (data && data.length > 0) {
         const userIds = data.map(req => req.user_id);
         const { data: profiles } = await supabase
           .from('profiles')
@@ -155,12 +123,6 @@ const Admin = () => {
     );
   }
 
-  // Pagination calculations
-  const totalPages = Math.ceil(requests.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentRequests = requests.slice(startIndex, endIndex);
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -182,38 +144,8 @@ const Admin = () => {
               </CardContent>
             </Card>
           ) : (
-            <>
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Showing {startIndex + 1}-{Math.min(endIndex, requests.length)} of {requests.length} requests
-                </p>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {currentRequests.map((request) => (
+            <div className="space-y-4">
+              {requests.map((request) => (
                 <Card key={request.id}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
@@ -285,35 +217,7 @@ const Admin = () => {
                   </CardContent>
                 </Card>
               ))}
-              </div>
-
-              {/* Pagination controls at bottom */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-6">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </>
+            </div>
           )}
         </div>
       </div>
