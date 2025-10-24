@@ -7,11 +7,11 @@ import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Settings as SettingsIcon, Mail, Lock, User } from "lucide-react";
+import { Settings as SettingsIcon, Mail, Lock, User, CreditCard } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const { profile, refetch } = useProfile();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState(user?.email || "");
@@ -19,12 +19,30 @@ const Settings = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [planExpiresAt, setPlanExpiresAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
       setUsername(profile.username || "");
     }
   }, [profile]);
+
+  useEffect(() => {
+    const fetchPlanExpiration = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('plan_expires_at')
+        .eq('id', user.id)
+        .single();
+      
+      if (data) {
+        setPlanExpiresAt(data.plan_expires_at);
+      }
+    };
+    
+    fetchPlanExpiration();
+  }, [user]);
 
   const handleUsernameUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +114,49 @@ const Settings = () => {
     }
   };
 
+  const handleDowngradeToPro = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ plan: 'pro' })
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      toast.success("Downgraded to Pro plan successfully!");
+      await refreshProfile();
+      await refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to downgrade plan");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDowngradeToFree = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ plan: 'free', plan_expires_at: null })
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      toast.success("Downgraded to Free plan successfully!");
+      await refreshProfile();
+      await refetch();
+      setPlanExpiresAt(null);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to downgrade plan");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -106,6 +167,46 @@ const Settings = () => {
             <SettingsIcon className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold text-foreground">Account Settings</h1>
           </div>
+
+          {/* Plan Management Section */}
+          <Card className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <CreditCard className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold text-foreground">Subscription Plan</h2>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Current Plan</p>
+                <p className="text-lg font-semibold capitalize">{profile?.plan || 'Free'}</p>
+                
+                {planExpiresAt && (
+                  <p className="text-sm text-muted-foreground">
+                    Expires: {new Date(planExpiresAt).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-2 flex-wrap">
+                {profile?.plan === 'ultimate' && (
+                  <>
+                    <Button onClick={handleDowngradeToPro} disabled={loading} variant="outline">
+                      {loading ? "Processing..." : "Downgrade to Pro"}
+                    </Button>
+                    <Button onClick={handleDowngradeToFree} disabled={loading} variant="outline">
+                      {loading ? "Processing..." : "Downgrade to Free"}
+                    </Button>
+                  </>
+                )}
+                
+                {profile?.plan === 'pro' && (
+                  <Button onClick={handleDowngradeToFree} disabled={loading} variant="outline">
+                    {loading ? "Processing..." : "Downgrade to Free"}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </Card>
 
           {/* Username Update Section */}
           <Card className="p-6">

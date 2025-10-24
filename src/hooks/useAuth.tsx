@@ -27,12 +27,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchUserProfile = async (userId: string) => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('plan')
+      .select('plan, plan_expires_at, lifetime_code')
       .eq('id', userId)
       .single();
 
     if (data && !error) {
-      setUserPlan(data.plan);
+      // Check if plan is expired (unless they have lifetime access)
+      if (data.plan_expires_at && !data.lifetime_code) {
+        const expirationDate = new Date(data.plan_expires_at);
+        const now = new Date();
+        
+        if (expirationDate < now && data.plan !== 'free') {
+          // Plan expired, downgrade to free
+          await supabase
+            .from('profiles')
+            .update({ plan: 'free', plan_expires_at: null })
+            .eq('id', userId);
+          setUserPlan('free');
+          toast.info('Your subscription has expired. You have been downgraded to the free plan.');
+        } else {
+          setUserPlan(data.plan);
+        }
+      } else {
+        setUserPlan(data.plan);
+      }
     }
   };
 

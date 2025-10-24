@@ -14,16 +14,152 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          stock_symbol: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          stock_symbol: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          stock_symbol?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payment_requests: {
+        Row: {
+          created_at: string
+          id: string
+          requested_plan: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          requested_plan: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          requested_plan?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          lifetime_code: string | null
+          plan: Database["public"]["Enums"]["subscription_plan"]
+          plan_expires_at: string | null
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          lifetime_code?: string | null
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          plan_expires_at?: string | null
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          lifetime_code?: string | null
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          plan_expires_at?: string | null
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          stock_symbol: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          stock_symbol: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          stock_symbol?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      apply_lifetime_code: { Args: { code: string }; Returns: boolean }
+      approve_payment_request: {
+        Args: { request_id: string }
+        Returns: boolean
+      }
+      check_plan_expiration: { Args: never; Returns: undefined }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      reject_payment_request: { Args: { request_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      subscription_plan: "free" | "pro" | "ultimate"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +286,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      subscription_plan: ["free", "pro", "ultimate"],
+    },
   },
 } as const

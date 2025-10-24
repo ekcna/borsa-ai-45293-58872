@@ -7,6 +7,7 @@ interface Profile {
   username: string | null;
   email: string | null;
   full_name: string | null;
+  plan: 'free' | 'pro' | 'ultimate';
 }
 
 export const useProfile = () => {
@@ -24,7 +25,7 @@ export const useProfile = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, email, full_name')
+        .select('id, username, email, full_name, plan')
         .eq('id', user.id)
         .single();
 
