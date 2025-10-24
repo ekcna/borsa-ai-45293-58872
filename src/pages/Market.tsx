@@ -1,16 +1,107 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import StockCard from "@/components/StockCard";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
-import { TrendingUp, TrendingDown, Eye, AlertTriangle, Filter } from "lucide-react";
-import { turkishStocks } from "@/data/turkishStocks";
+import { TrendingUp, TrendingDown, Eye, AlertTriangle, Filter, Loader2 } from "lucide-react";
+import { Stock } from "@/data/turkishStocks";
 
 const Market = () => {
   const { userPlan } = useAuth();
   const [filter, setFilter] = useState<"all" | "rise" | "watch" | "risky">("all");
   const [sortBy, setSortBy] = useState<"name" | "change" | "volume">("change");
+  const [turkishStocks, setTurkishStocks] = useState<Stock[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStockData = async () => {
+      try {
+        setLoading(true);
+        const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-turkish-stocks`;
+
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch stock data');
+        }
+
+        const data = await response.json();
+
+        const formattedData: Stock[] = data.map((stock: any) => {
+          const change = parseFloat(stock.change) || parseFloat(stock.changePercent) || 0;
+          let prediction: "rise" | "watch" | "risky" = "watch";
+          let probability = 60;
+          let sentiment = "Neutral";
+
+          if (change >= 3) {
+            prediction = "rise";
+            probability = 70 + Math.floor(Math.random() * 15);
+            sentiment = change >= 5 ? "Very Positive" : "Positive";
+          } else if (change < -1) {
+            prediction = "risky";
+            probability = 40 + Math.floor(Math.random() * 15);
+            sentiment = "Negative";
+          } else if (change >= 1) {
+            prediction = "rise";
+            probability = 65 + Math.floor(Math.random() * 10);
+            sentiment = "Positive";
+          } else {
+            probability = 55 + Math.floor(Math.random() * 10);
+          }
+
+          const sectorMap: { [key: string]: string } = {
+            ASELS: "Defense",
+            TUPRS: "Energy",
+            THYAO: "Airlines",
+            EREGL: "Steel",
+            AKBNK: "Banking",
+            GARAN: "Banking",
+            ISCTR: "Banking",
+            KCHOL: "Holding",
+            SAHOL: "Holding",
+            SISE: "Industrial",
+            TTKOM: "Telecom",
+            PETKM: "Chemicals",
+            BIMAS: "Retail",
+            EKGYO: "Real Estate",
+            TCELL: "Telecom"
+          };
+
+          return {
+            symbol: stock.code,
+            name: stock.name,
+            prediction,
+            probability,
+            price: `₺${parseFloat(stock.price).toFixed(2)}`,
+            change: parseFloat(change.toFixed(2)),
+            sentiment,
+            volume: `${(stock.volume / 1000000).toFixed(1)}M`,
+            sector: sectorMap[stock.code] || "Other",
+            marketCap: `₺${(parseFloat(stock.price) * stock.volume / 1000000).toFixed(1)}B`
+          };
+        });
+
+        setTurkishStocks(formattedData);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching stock data:', err);
+        setError('Failed to load stock data. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStockData();
+    const interval = setInterval(fetchStockData, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const getFilteredStocks = () => {
     let filtered = [...turkishStocks];
@@ -46,6 +137,34 @@ const Market = () => {
   const risingStocks = turkishStocks.filter((s) => s.change >= 3).length;
   const fallingStocks = turkishStocks.filter((s) => s.change < -1).length;
   const totalVolume = turkishStocks.reduce((acc, s) => acc + parseFloat(s.volume.replace(/[^\d.]/g, "")), 0);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Loading stock data...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <p className="text-destructive mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
