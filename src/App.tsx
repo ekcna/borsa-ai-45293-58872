@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/hooks/useLanguage";
 import Index from "./pages/Index";
 import Market from "./pages/Market";
 import CryptoMarket from "./pages/CryptoMarket";
+import CryptoDetail from "./pages/CryptoDetail";
 import StockDetail from "./pages/StockDetail";
 import Auth from "./pages/Auth";
 import Pricing from "./pages/Pricing";
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/market" element={<Market />} />
             <Route path="/crypto" element={<CryptoMarket />} />
+            <Route path="/crypto/:symbol" element={<CryptoDetail />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/admin" element={<Admin />} />
