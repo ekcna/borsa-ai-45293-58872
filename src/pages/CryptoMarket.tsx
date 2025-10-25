@@ -24,13 +24,13 @@ const CryptoMarket = () => {
   const liveCryptoData = useMemo(() => {
     return cryptoData.map(crypto => {
       const livePrice = prices[crypto.symbol];
-      if (livePrice && livePrice.price !== undefined) {
+      if (livePrice) {
         return {
           ...crypto,
           price: `$${livePrice.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          change: parseFloat((livePrice.change || 0).toFixed(2)),
-          volume: livePrice.volume ? `${(livePrice.volume / 1000000000).toFixed(2)}B` : crypto.volume,
-          marketCap: livePrice.marketCap ? `${(livePrice.marketCap / 1000000000).toFixed(2)}B` : crypto.marketCap,
+          change: parseFloat(livePrice.change.toFixed(2)),
+          volume: `${(livePrice.volume / 1000000000).toFixed(2)}B`,
+          marketCap: `${(livePrice.marketCap / 1000000000).toFixed(2)}B`,
         };
       }
       return crypto;

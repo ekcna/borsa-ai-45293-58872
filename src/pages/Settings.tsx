@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Settings as SettingsIcon, Mail, Lock, User, CreditCard, Gift } from "lucide-react";
+import { Settings as SettingsIcon, Mail, Lock, User, CreditCard } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 
 const Settings = () => {
@@ -20,7 +20,6 @@ const Settings = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [planExpiresAt, setPlanExpiresAt] = useState<string | null>(null);
-  const [accessCode, setAccessCode] = useState("");
 
   useEffect(() => {
     if (profile) {
@@ -121,11 +120,11 @@ const Settings = () => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ subscription_plan: 'pro' })
+        .update({ plan: 'pro' })
         .eq('id', user.id);
-
+      
       if (error) throw error;
-
+      
       toast.success("Downgraded to Pro plan successfully!");
       await refreshProfile();
       await refetch();
@@ -142,44 +141,17 @@ const Settings = () => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ subscription_plan: 'free' })
+        .update({ plan: 'free', plan_expires_at: null })
         .eq('id', user.id);
-
+      
       if (error) throw error;
-
+      
       toast.success("Downgraded to Free plan successfully!");
       await refreshProfile();
       await refetch();
       setPlanExpiresAt(null);
     } catch (error: any) {
       toast.error(error.message || "Failed to downgrade plan");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRedeemCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !accessCode.trim()) return;
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('redeem-access-code', {
-        body: { code: accessCode.trim() }
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        toast.success(data.message);
-        setAccessCode("");
-        await refreshProfile();
-        await refetch();
-      } else {
-        toast.error(data.error || "Failed to redeem code");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to redeem access code");
     } finally {
       setLoading(false);
     }
@@ -196,35 +168,6 @@ const Settings = () => {
             <h1 className="text-3xl font-bold text-foreground">Account Settings</h1>
           </div>
 
-          {/* Redeem Access Code Section */}
-          <Card className="p-6">
-            <form onSubmit={handleRedeemCode} className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Gift className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-semibold text-foreground">Redeem Access Code</h2>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="accessCode">Access Code</Label>
-                <Input
-                  id="accessCode"
-                  type="text"
-                  value={accessCode}
-                  onChange={(e) => setAccessCode(e.target.value)}
-                  placeholder="Enter your access code"
-                  className="font-mono"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Enter a lifetime access code to upgrade your account
-                </p>
-              </div>
-
-              <Button type="submit" disabled={loading || !accessCode.trim()}>
-                {loading ? "Redeeming..." : "Redeem Code"}
-              </Button>
-            </form>
-          </Card>
-
           {/* Plan Management Section */}
           <Card className="p-6">
             <div className="space-y-4">
@@ -232,11 +175,11 @@ const Settings = () => {
                 <CreditCard className="h-5 w-5 text-primary" />
                 <h2 className="text-xl font-semibold text-foreground">Subscription Plan</h2>
               </div>
-
+              
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">Current Plan</p>
-                <p className="text-lg font-semibold capitalize">{profile?.subscription_plan || 'Free'}</p>
-
+                <p className="text-lg font-semibold capitalize">{profile?.plan || 'Free'}</p>
+                
                 {planExpiresAt && (
                   <p className="text-sm text-muted-foreground">
                     Expires: {new Date(planExpiresAt).toLocaleDateString()}
@@ -245,7 +188,7 @@ const Settings = () => {
               </div>
 
               <div className="flex gap-2 flex-wrap">
-                {profile?.subscription_plan === 'ultimate' && (
+                {profile?.plan === 'ultimate' && (
                   <>
                     <Button onClick={handleDowngradeToPro} disabled={loading} variant="outline">
                       {loading ? "Processing..." : "Downgrade to Pro"}
@@ -255,8 +198,8 @@ const Settings = () => {
                     </Button>
                   </>
                 )}
-
-                {profile?.subscription_plan === 'pro' && (
+                
+                {profile?.plan === 'pro' && (
                   <Button onClick={handleDowngradeToFree} disabled={loading} variant="outline">
                     {loading ? "Processing..." : "Downgrade to Free"}
                   </Button>
