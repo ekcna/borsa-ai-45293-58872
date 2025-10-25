@@ -52,6 +52,7 @@ const pricingPlans = [
     description: 'Complete market intelligence suite',
     features: [
       'Everything in Pro',
+      'AI Trader - Automated trading',
       'Real-time news tracking',
       'Lifetime data history',
       'Custom AI strategies',
@@ -244,15 +245,15 @@ const Pricing = () => {
               <div className="bg-muted p-4 rounded-lg space-y-3">
                 <div>
                   <p className="text-sm font-semibold text-muted-foreground">Bitcoin (BTC)</p>
-                  <p className="text-xs font-mono break-all">bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</p>
+                  <p className="text-xs font-mono break-all">bc1q5aee3as6ncn89j3qm0udyl76tekzunnc3yvuhe</p>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-muted-foreground">Ethereum (ETH)</p>
-                  <p className="text-xs font-mono break-all">0x71C7656EC7ab88b098defB751B7401B5f6d8976F</p>
+                  <p className="text-xs font-mono break-all">0x6fc50ed75c1c9d585f4b04e12fabef62df82fcb0</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-muted-foreground">USDT (TRC20)</p>
-                  <p className="text-xs font-mono break-all">TMmL5qMnvFHvR9pXhLNhqDMsMhgaHQxjfF</p>
+                  <p className="text-sm font-semibold text-muted-foreground">USDT (ERC20)</p>
+                  <p className="text-xs font-mono break-all">0x6fc50ed75c1c9d585f4b04e12fabef62df82fcb0</p>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-muted-foreground">Reference</p>

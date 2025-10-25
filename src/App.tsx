@@ -16,6 +16,7 @@ import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
 import Wishlist from "./pages/Wishlist";
 import Notifications from "./pages/Notifications";
+import AITrader from "./pages/AITrader";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/ai-trader" element={<AITrader />} />
             <Route path="/stock/:symbol" element={<StockDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

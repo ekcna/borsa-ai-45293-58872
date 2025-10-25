@@ -62,6 +62,7 @@ const Navbar = () => {
     if (path === '/') return 'home';
     if (path === '/market') return 'market';
     if (path === '/crypto') return 'crypto';
+    if (path === '/ai-trader') return 'ai-trader';
     if (path === '/pricing') return 'plans';
     if (path === '/wishlist') return 'wishlist';
     if (path === '/notifications') return 'notifications';
@@ -80,6 +81,9 @@ const Navbar = () => {
         break;
       case 'crypto':
         navigate('/crypto');
+        break;
+      case 'ai-trader':
+        navigate('/ai-trader');
         break;
       case 'plans':
         navigate('/pricing');
@@ -118,6 +122,7 @@ const Navbar = () => {
                 <TabsTrigger value="home">Home</TabsTrigger>
                 <TabsTrigger value="market">Stocks</TabsTrigger>
                 <TabsTrigger value="crypto">Crypto</TabsTrigger>
+                <TabsTrigger value="ai-trader">AI Trader</TabsTrigger>
                 <TabsTrigger value="plans">Plans</TabsTrigger>
                 {user && <TabsTrigger value="wishlist">Wishlist</TabsTrigger>}
                 {user && <TabsTrigger value="notifications">Notifications</TabsTrigger>}
