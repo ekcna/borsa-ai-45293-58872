@@ -5,9 +5,9 @@ import { useAuth } from './useAuth';
 interface Profile {
   id: string;
   username: string | null;
-  email: string | null;
   full_name: string | null;
-  plan: 'free' | 'pro' | 'ultimate';
+  subscription_plan: 'free' | 'pro' | 'ultimate';
+  is_admin: boolean;
 }
 
 export const useProfile = () => {
@@ -25,9 +25,9 @@ export const useProfile = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, email, full_name, plan')
+        .select('id, username, full_name, subscription_plan, is_admin')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       setProfile(data);
