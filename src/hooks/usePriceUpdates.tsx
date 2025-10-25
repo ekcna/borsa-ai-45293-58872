@@ -49,10 +49,10 @@ export const usePriceUpdates = (type: 'crypto' | 'stocks', symbols: string[]) =>
   useEffect(() => {
     // Initial fetch
     fetchPrices();
-    
-    // Update every 30 seconds for real-time feel
-    const interval = setInterval(fetchPrices, 30000);
-    
+
+    // Update every 10 seconds for real-time updates
+    const interval = setInterval(fetchPrices, 10000);
+
     return () => clearInterval(interval);
   }, [fetchPrices]);
 
