@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
+import StockNews from "@/components/StockNews";
 import {
   TrendingUp,
   TrendingDown,
@@ -348,35 +349,11 @@ const CryptoDetail = () => {
             </Card>
 
             {/* Recent News */}
-            <Card className="p-6">
-              <h3 className="font-semibold text-lg mb-4 text-foreground">Recent News</h3>
-              
-              {canAccessNews ? (
-                <>
-                  <div className="space-y-3">
-                    <div className="pb-3 border-b border-border/50">
-                      <p className="text-sm font-medium text-foreground mb-1">
-                        {crypto.name} reaches new milestone
-                      </p>
-                      <p className="text-xs text-muted-foreground">1 hour ago • CoinDesk</p>
-                    </div>
-                    <div className="pb-3 border-b border-border/50">
-                      <p className="text-sm font-medium text-foreground mb-1">
-                        Major exchange lists {crypto.symbol}
-                      </p>
-                      <p className="text-xs text-muted-foreground">4 hours ago • Cointelegraph</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground mb-1">Market analysis: {crypto.symbol} outlook</p>
-                      <p className="text-xs text-muted-foreground">12 hours ago • CryptoNews</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" className="w-full mt-4">
-                    View All News
-                    <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </>
-              ) : (
+            {canAccessNews ? (
+              <StockNews stockSymbol={crypto.symbol} stockName={crypto.name} type="crypto" />
+            ) : (
+              <Card className="p-6">
+                <h3 className="font-semibold text-lg mb-4 text-foreground">Recent News</h3>
                 <div className="space-y-4 relative min-h-[200px]">
                   <div className="absolute inset-0 bg-background/60 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
                     <div className="text-center p-6">
@@ -403,8 +380,8 @@ const CryptoDetail = () => {
                     </div>
                   </div>
                 </div>
-              )}
-            </Card>
+              </Card>
+            )}
           </div>
         </div>
       </div>

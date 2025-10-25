@@ -433,7 +433,7 @@ const StockDetail = () => {
 
         {/* Full-width News Section */}
         <div className="mt-8">
-          <StockNews stockSymbol={stock.symbol} stockName={stock.name} />
+          <StockNews stockSymbol={stock.symbol} stockName={stock.name} type="stock" />
         </div>
       </div>
     </div>
