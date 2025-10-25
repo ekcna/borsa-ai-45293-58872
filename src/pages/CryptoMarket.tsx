@@ -1,128 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
-import { TrendingUp, TrendingDown, Eye, AlertTriangle, Filter, Bitcoin, Coins, Loader2 } from "lucide-react";
+import { TrendingUp, TrendingDown, Eye, AlertTriangle, Filter, Bitcoin, Coins } from "lucide-react";
 import { Link } from "react-router-dom";
-import { CryptoData } from "@/data/cryptoData";
+import { cryptoData } from "@/data/cryptoData";
 
 const CryptoMarket = () => {
   const { userPlan } = useAuth();
   const [filter, setFilter] = useState<"all" | "rise" | "watch" | "risky">("all");
   const [sortBy, setSortBy] = useState<"name" | "change" | "volume">("change");
-  const [cryptoData, setCryptoData] = useState<CryptoData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  
   const canAccessAdvancedFeatures = userPlan === 'pro' || userPlan === 'ultimate';
-
-  useEffect(() => {
-    const fetchCryptoData = async () => {
-      try {
-        setLoading(true);
-        const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-crypto-prices`;
-
-        const response = await fetch(apiUrl, {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch crypto data');
-        }
-
-        const data = await response.json();
-
-        const cryptoIcons: { [key: string]: string } = {
-          bitcoin: "₿",
-          ethereum: "Ξ",
-          binancecoin: "⬡",
-          solana: "◎",
-          ripple: "✕",
-          cardano: "₳",
-          avalanche: "⛰",
-          polkadot: "●",
-          dogecoin: "Ð",
-          chainlink: "⬡"
-        };
-
-        const cryptoNames: { [key: string]: string } = {
-          bitcoin: "Bitcoin",
-          ethereum: "Ethereum",
-          binancecoin: "Binance Coin",
-          solana: "Solana",
-          ripple: "Ripple",
-          cardano: "Cardano",
-          "avalanche-2": "Avalanche",
-          polkadot: "Polkadot",
-          dogecoin: "Dogecoin",
-          chainlink: "Chainlink"
-        };
-
-        const cryptoSymbols: { [key: string]: string } = {
-          bitcoin: "BTC",
-          ethereum: "ETH",
-          binancecoin: "BNB",
-          solana: "SOL",
-          ripple: "XRP",
-          cardano: "ADA",
-          "avalanche-2": "AVAX",
-          polkadot: "DOT",
-          dogecoin: "DOGE",
-          chainlink: "LINK"
-        };
-
-        const formattedData: CryptoData[] = Object.entries(data).map(([id, values]: [string, any]) => {
-          const change = values.usd_24h_change || 0;
-          let prediction: "rise" | "watch" | "risky" = "watch";
-          let probability = 60;
-          let sentiment = "Neutral";
-
-          if (change >= 3) {
-            prediction = "rise";
-            probability = 70 + Math.floor(Math.random() * 15);
-            sentiment = change >= 5 ? "Very Bullish" : "Bullish";
-          } else if (change < -1) {
-            prediction = "risky";
-            probability = 40 + Math.floor(Math.random() * 15);
-            sentiment = "Bearish";
-          } else {
-            probability = 55 + Math.floor(Math.random() * 10);
-          }
-
-          return {
-            symbol: cryptoSymbols[id] || id.toUpperCase().slice(0, 4),
-            name: cryptoNames[id] || id,
-            price: `$${values.usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            change: parseFloat(change.toFixed(2)),
-            volume: `${(values.usd_24h_vol / 1e9).toFixed(2)}B`,
-            marketCap: `${(values.usd_market_cap / 1e12).toFixed(2)}T`,
-            icon: cryptoIcons[id] || "◎",
-            prediction,
-            probability,
-            sentiment,
-            circulatingSupply: "N/A"
-          };
-        });
-
-        setCryptoData(formattedData);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching crypto data:', err);
-        setError('Failed to load crypto data. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCryptoData();
-    const interval = setInterval(fetchCryptoData, 60000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const getFilteredCrypto = () => {
     let filtered = [...cryptoData];
@@ -161,34 +52,6 @@ const CryptoMarket = () => {
     const value = parseFloat(c.marketCap.replace(/[^\d.]/g, ""));
     return acc + value;
   }, 0);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2 text-muted-foreground">Loading crypto data...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-12">
-            <p className="text-destructive mb-4">{error}</p>
-            <Button onClick={() => window.location.reload()}>Retry</Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
