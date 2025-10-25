@@ -1,19 +1,40 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import StockCard from "@/components/StockCard";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
-import { TrendingUp, TrendingDown, Eye, AlertTriangle, Filter } from "lucide-react";
+import { TrendingUp, TrendingDown, Eye, AlertTriangle, Filter, RefreshCw } from "lucide-react";
 import { turkishStocks } from "@/data/turkishStocks";
+import { usePriceUpdates } from "@/hooks/usePriceUpdates";
 
 const Market = () => {
   const { userPlan } = useAuth();
   const [filter, setFilter] = useState<"all" | "rise" | "watch" | "risky">("all");
   const [sortBy, setSortBy] = useState<"name" | "change" | "volume">("change");
 
+  // Get all stock symbols for price updates
+  const symbols = useMemo(() => turkishStocks.map(s => s.symbol), []);
+  const { prices, isLoading, lastUpdate, refetch } = usePriceUpdates('stocks', symbols);
+  
+  // Merge live prices with static stock data
+  const liveStockData = useMemo(() => {
+    return turkishStocks.map(stock => {
+      const livePrice = prices[stock.symbol];
+      if (livePrice) {
+        return {
+          ...stock,
+          price: `₺${livePrice.price.toFixed(2)}`,
+          change: parseFloat(livePrice.change.toFixed(2)),
+          volume: `${(livePrice.volume / 1000000).toFixed(2)}M`,
+        };
+      }
+      return stock;
+    });
+  }, [prices]);
+
   const getFilteredStocks = () => {
-    let filtered = [...turkishStocks];
+    let filtered = [...liveStockData];
 
     switch (filter) {
       case "rise":
@@ -43,9 +64,9 @@ const Market = () => {
   };
 
   const filteredStocks = getFilteredStocks();
-  const risingStocks = turkishStocks.filter((s) => s.change >= 3).length;
-  const fallingStocks = turkishStocks.filter((s) => s.change < -1).length;
-  const totalVolume = turkishStocks.reduce((acc, s) => acc + parseFloat(s.volume.replace(/[^\d.]/g, "")), 0);
+  const risingStocks = liveStockData.filter((s) => s.change >= 3).length;
+  const fallingStocks = liveStockData.filter((s) => s.change < -1).length;
+  const totalVolume = liveStockData.reduce((acc, s) => acc + parseFloat(s.volume.replace(/[^\d.]/g, "")), 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,8 +75,33 @@ const Market = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8 animate-fade-in">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Turkish Stock Market</h1>
-          <p className="text-muted-foreground">Real-time stock data from BIST</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-foreground mb-2">Turkish Stock Market</h1>
+              <p className="text-muted-foreground">Real-time stock data from BIST</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="h-2 w-2 bg-success rounded-full animate-pulse" />
+                  Live Updates
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Updated: {lastUpdate.toLocaleTimeString()}
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => refetch()}
+                disabled={isLoading}
+                className="gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Live Stats */}

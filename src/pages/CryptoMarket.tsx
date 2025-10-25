@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
-import { TrendingUp, TrendingDown, Eye, AlertTriangle, Filter, Bitcoin, Coins } from "lucide-react";
+import { TrendingUp, TrendingDown, Eye, AlertTriangle, Filter, Bitcoin, Coins, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cryptoData } from "@/data/cryptoData";
+import { usePriceUpdates } from "@/hooks/usePriceUpdates";
 
 const CryptoMarket = () => {
   const { userPlan } = useAuth();
@@ -14,9 +15,30 @@ const CryptoMarket = () => {
   const [sortBy, setSortBy] = useState<"name" | "change" | "volume">("change");
   
   const canAccessAdvancedFeatures = userPlan === 'pro' || userPlan === 'ultimate';
+  
+  // Get all crypto symbols for price updates
+  const symbols = useMemo(() => cryptoData.map(c => c.symbol), []);
+  const { prices, isLoading, lastUpdate, refetch } = usePriceUpdates('crypto', symbols);
+  
+  // Merge live prices with static crypto data
+  const liveCryptoData = useMemo(() => {
+    return cryptoData.map(crypto => {
+      const livePrice = prices[crypto.symbol];
+      if (livePrice) {
+        return {
+          ...crypto,
+          price: `$${livePrice.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          change: parseFloat(livePrice.change.toFixed(2)),
+          volume: `${(livePrice.volume / 1000000000).toFixed(2)}B`,
+          marketCap: `${(livePrice.marketCap / 1000000000).toFixed(2)}B`,
+        };
+      }
+      return crypto;
+    });
+  }, [prices]);
 
   const getFilteredCrypto = () => {
-    let filtered = [...cryptoData];
+    let filtered = [...liveCryptoData];
 
     switch (filter) {
       case "rise":
@@ -46,9 +68,9 @@ const CryptoMarket = () => {
   };
 
   const filteredCrypto = getFilteredCrypto();
-  const risingCrypto = cryptoData.filter((c) => c.change >= 3).length;
-  const fallingCrypto = cryptoData.filter((c) => c.change < -1).length;
-  const totalMarketCap = cryptoData.reduce((acc, c) => {
+  const risingCrypto = liveCryptoData.filter((c) => c.change >= 3).length;
+  const fallingCrypto = liveCryptoData.filter((c) => c.change < -1).length;
+  const totalMarketCap = liveCryptoData.reduce((acc, c) => {
     const value = parseFloat(c.marketCap.replace(/[^\d.]/g, ""));
     return acc + value;
   }, 0);
@@ -60,11 +82,36 @@ const CryptoMarket = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8 animate-fade-in">
-          <div className="flex items-center gap-3 mb-2">
-            <Bitcoin className="h-10 w-10 text-primary" />
-            <h1 className="text-4xl font-bold text-foreground">Crypto Market</h1>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <Bitcoin className="h-10 w-10 text-primary" />
+                <h1 className="text-4xl font-bold text-foreground">Crypto Market</h1>
+              </div>
+              <p className="text-muted-foreground">Real-time cryptocurrency prices and trends</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="h-2 w-2 bg-success rounded-full animate-pulse" />
+                  Live Updates
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Updated: {lastUpdate.toLocaleTimeString()}
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => refetch()}
+                disabled={isLoading}
+                className="gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </div>
-          <p className="text-muted-foreground">Real-time cryptocurrency prices and trends</p>
         </div>
 
         {/* Live Stats */}
