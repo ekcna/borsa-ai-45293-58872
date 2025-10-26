@@ -24,7 +24,7 @@ const CryptoMarket = () => {
   const liveCryptoData = useMemo(() => {
     return cryptoData.map(crypto => {
       const livePrice = prices[crypto.symbol];
-      if (livePrice) {
+      if (livePrice && livePrice.price) {
         return {
           ...crypto,
           price: `$${livePrice.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,

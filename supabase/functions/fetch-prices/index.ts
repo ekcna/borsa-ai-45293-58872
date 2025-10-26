@@ -56,7 +56,7 @@ serve(async (req) => {
       const prices: { [key: string]: any } = {};
       
       for (const [symbol, coinId] of Object.entries(symbolMap)) {
-        if (data[coinId]) {
+        if (data[coinId] && data[coinId].usd) {
           prices[symbol] = {
             price: data[coinId].usd,
             change: data[coinId].usd_24h_change || 0,
