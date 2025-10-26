@@ -143,18 +143,24 @@ const Navbar = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder={t("searchPlaceholder")}
-                    className="pl-10 bg-secondary/50"
+                    className="pl-10 bg-secondary/50 focus:bg-secondary"
                     value={searchValue}
                     onChange={(e) => {
                       setSearchValue(e.target.value);
-                      setOpen(true);
+                      if (e.target.value) setOpen(true);
                     }}
-                    onFocus={() => setOpen(true)}
+                    onFocus={() => {
+                      if (searchValue) setOpen(true);
+                    }}
                   />
                 </div>
               </PopoverTrigger>
-              <PopoverContent className="p-0 w-[400px]" align="end">
-                <Command>
+              <PopoverContent 
+                className="p-0 w-[400px]" 
+                align="end"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
+                <Command shouldFilter={false}>
                   <CommandInput
                     placeholder={t("searchPlaceholder")}
                     value={searchValue}
@@ -163,7 +169,7 @@ const Navbar = () => {
                   <CommandList>
                     <CommandEmpty>{t("noStocksFound")}</CommandEmpty>
                     <CommandGroup heading={t("turkishStocks")}>
-                      {filteredStocks.map((stock) => (
+                      {filteredStocks.slice(0, 8).map((stock) => (
                         <CommandItem
                           key={stock.symbol}
                           onSelect={() => handleStockSelect(stock.symbol)}
