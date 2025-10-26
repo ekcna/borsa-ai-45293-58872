@@ -73,41 +73,69 @@ serve(async (req) => {
         }
       );
     } else if (type === 'stocks') {
-      // Use Google Finance-style API or fallback to Yahoo Finance
-      // For now, using a more realistic simulation based on actual Turkish stock market
+      // Fetch real Turkish stock prices from Yahoo Finance
       const prices: { [key: string]: any } = {};
       
-      // More realistic Turkish stock prices (in TRY)
-      const baseStockPrices: { [key: string]: number } = {
-        'THYAO': 285.50,  // Turkish Airlines
-        'GARAN': 142.30,  // Garanti Bank
-        'ISCTR': 8.75,    // Isbank
-        'TUPRS': 185.20,  // Tupras
-        'AKBNK': 56.80,   // Akbank
-        'EREGL': 48.90,   // Eregli
-        'SASA': 125.60,   // Sasa
-        'BIMAS': 178.40,  // BIM
-        'KCHOL': 215.70,  // Koc Holding
-        'SAHOL': 92.30    // Sabanci Holding
-      };
+      // Fetch prices for all symbols in parallel
+      const stockPromises = symbols.map(async (symbol: string) => {
+        try {
+          // Yahoo Finance uses .IS suffix for Istanbul Stock Exchange
+          const yahooSymbol = `${symbol}.IS`;
+          const response = await fetch(
+            `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=2d`,
+            {
+              headers: {
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'application/json'
+              }
+            }
+          );
 
-      for (const symbol of symbols) {
-        const basePrice = baseStockPrices[symbol] || 100;
-        // Add realistic market variation (-1.5% to +1.5%)
-        const variation = (Math.random() - 0.5) * 0.03;
-        const currentPrice = basePrice * (1 + variation);
-        const change = variation * 100;
-        
-        // Realistic volume for Turkish stocks (in millions TRY)
-        const volumeBase = basePrice * 100000; // Scale volume by price
-        const volumeVariation = Math.random() * 0.5 + 0.75; // 75% to 125%
-        const volume = volumeBase * volumeVariation;
+          if (!response.ok) {
+            console.error(`Yahoo Finance API error for ${symbol}: ${response.status}`);
+            return { symbol, data: null };
+          }
 
-        prices[symbol] = {
-          price: currentPrice,
-          change: change,
-          volume: volume
-        };
+          const data = await response.json();
+          const result = data?.chart?.result?.[0];
+          
+          if (result?.meta && result?.indicators?.quote?.[0]) {
+            const meta = result.meta;
+            const quote = result.indicators.quote[0];
+            const currentPrice = meta.regularMarketPrice || quote.close?.[quote.close.length - 1];
+            const previousClose = meta.chartPreviousClose;
+            
+            // Calculate 24h change percentage
+            const change = previousClose ? ((currentPrice - previousClose) / previousClose) * 100 : 0;
+            
+            // Get volume
+            const volumes = quote.volume || [];
+            const volume = volumes[volumes.length - 1] || 0;
+
+            return {
+              symbol,
+              data: {
+                price: currentPrice,
+                change: change,
+                volume: volume
+              }
+            };
+          }
+          
+          return { symbol, data: null };
+        } catch (error) {
+          console.error(`Error fetching ${symbol}:`, error);
+          return { symbol, data: null };
+        }
+      });
+
+      const results = await Promise.all(stockPromises);
+      
+      // Build prices object
+      for (const result of results) {
+        if (result.data) {
+          prices[result.symbol] = result.data;
+        }
       }
 
       return new Response(
