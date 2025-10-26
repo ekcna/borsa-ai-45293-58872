@@ -106,14 +106,14 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center gap-4">
+        <div className="flex h-12 items-center gap-4">
           {/* Logo and Tabs on the left */}
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-hero flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-primary-foreground" />
+              <div className="w-7 h-7 rounded-lg bg-gradient-hero flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="font-bold text-lg text-foreground">{t("appName")}</span>
+              <span className="font-bold text-base text-foreground">{t("appName")}</span>
             </Link>
 
             {/* Navigation Tabs */}
