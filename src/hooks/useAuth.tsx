@@ -133,18 +133,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      toast.error(error.message);
-      throw error;
+      if (error) {
+        console.error('Sign in error:', error);
+        toast.error(error.message || 'Failed to sign in. Please check your credentials.');
+        throw error;
+      }
+
+      if (!data.session) {
+        toast.error('Failed to create session. Please try again.');
+        throw new Error('No session created');
+      }
+
+      toast.success('Signed in successfully!');
+      navigate('/');
+    } catch (err: any) {
+      console.error('Sign in exception:', err);
+      if (err.message === 'Load failed' || err.message.includes('network')) {
+        toast.error('Network error. Please check your connection and try again.');
+      } else if (!err.message.includes('credentials')) {
+        toast.error('Unable to sign in. Please try again.');
+      }
+      throw err;
     }
-
-    toast.success('Signed in successfully!');
-    navigate('/');
   };
 
   const signOut = async () => {

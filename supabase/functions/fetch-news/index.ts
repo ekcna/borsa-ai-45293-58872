@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +16,59 @@ interface NewsItem {
   url?: string;
 }
 
+async function fetchGoogleNews(searchQuery: string): Promise<NewsItem[]> {
+  try {
+    const encodedQuery = encodeURIComponent(searchQuery);
+    const rssUrl = `https://news.google.com/rss/search?q=${encodedQuery}&hl=en-US&gl=US&ceid=US:en`;
+    
+    console.log('Fetching news from:', rssUrl);
+    const response = await fetch(rssUrl);
+    const text = await response.text();
+    
+    const doc = new DOMParser().parseFromString(text, 'text/xml');
+    const items = doc?.querySelectorAll('item') || [];
+    
+    const newsItems: NewsItem[] = [];
+    
+    for (let i = 0; i < Math.min(items.length, 10); i++) {
+      const item = items[i] as any;
+      const title = item.querySelector('title')?.textContent || '';
+      const link = item.querySelector('link')?.textContent || '';
+      const pubDate = item.querySelector('pubDate')?.textContent || '';
+      const description = item.querySelector('description')?.textContent || '';
+      
+      // Simple sentiment analysis based on keywords
+      const lowerText = (title + description).toLowerCase();
+      let sentiment: "positive" | "neutral" | "negative" = "neutral";
+      
+      if (lowerText.includes('surge') || lowerText.includes('gain') || lowerText.includes('rise') || 
+          lowerText.includes('profit') || lowerText.includes('growth') || lowerText.includes('bullish') ||
+          lowerText.includes('up') || lowerText.includes('high') || lowerText.includes('strong')) {
+        sentiment = "positive";
+      } else if (lowerText.includes('drop') || lowerText.includes('fall') || lowerText.includes('loss') || 
+                 lowerText.includes('decline') || lowerText.includes('bearish') || lowerText.includes('crash') ||
+                 lowerText.includes('down') || lowerText.includes('weak') || lowerText.includes('plunge')) {
+        sentiment = "negative";
+      }
+      
+      newsItems.push({
+        id: `news-${i}-${Date.now()}`,
+        title: title.split(' - ')[0] || title,
+        summary: description.replace(/<[^>]*>/g, '').substring(0, 200) + '...',
+        date: new Date(pubDate).toISOString(),
+        sentiment,
+        source: 'Google News',
+        url: link,
+      });
+    }
+    
+    return newsItems;
+  } catch (error) {
+    console.error('Error fetching Google News:', error);
+    return [];
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -24,61 +78,20 @@ serve(async (req) => {
     const { symbol, name, type } = await req.json();
     console.log('Fetching news for:', { symbol, name, type });
 
-    // Construct search query
+    // Construct search query based on type
     const query = type === 'crypto' 
-      ? `${name} ${symbol} cryptocurrency news latest` 
-      : `${name} ${symbol} stock market news latest`;
+      ? `${name} ${symbol} cryptocurrency bitcoin news` 
+      : `${name} ${symbol} BIST borsa istanbul stock news`;
 
-    // Use Brave Search API or similar - for now using a simple approach
-    // In production, you'd want to use a proper news API
-    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=nws`;
-    
-    // For this demo, we'll create a structured response
-    // In production, integrate with a real news API like NewsAPI, Alpha Vantage, or similar
-    
-    const mockNews: NewsItem[] = [
-      {
-        id: "1",
-        title: `${name} Shows Strong Performance in Recent Trading`,
-        summary: `${symbol} has demonstrated significant market activity with notable volume increases...`,
-        date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        sentiment: "positive",
-        source: "Financial Times",
-        url: searchUrl
-      },
-      {
-        id: "2",
-        title: `Market Analysis: ${name} Outlook`,
-        summary: `Analysts provide insights on ${symbol} performance and future projections...`,
-        date: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-        sentiment: "neutral",
-        source: "Bloomberg",
-        url: searchUrl
-      },
-      {
-        id: "3",
-        title: `${name} Announces Strategic Updates`,
-        summary: `${symbol} reveals new developments that could impact market position...`,
-        date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        sentiment: "positive",
-        source: "Reuters",
-        url: searchUrl
-      },
-      {
-        id: "4",
-        title: `Market Volatility Affects ${name}`,
-        summary: `${symbol} experiences fluctuations amid broader market movements...`,
-        date: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
-        sentiment: "negative",
-        source: "Wall Street Journal",
-        url: searchUrl
-      }
-    ];
+    console.log('Search query:', query);
 
-    console.log('Returning news items:', mockNews.length);
+    // Fetch real news from Google News RSS
+    const news = await fetchGoogleNews(query);
+    
+    console.log('Returning news items:', news.length);
 
     return new Response(
-      JSON.stringify({ news: mockNews, timestamp: new Date().toISOString() }),
+      JSON.stringify({ news, timestamp: new Date().toISOString() }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
