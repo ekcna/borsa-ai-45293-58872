@@ -13,9 +13,10 @@ import { Label } from '@/components/ui/label';
 const pricingPlans = [
   {
     name: 'Free',
-    price: '₺0',
+    price: '$0',
     period: 'forever',
     description: 'Perfect for beginners exploring the Turkish market',
+    paymentLink: undefined as string | undefined,
     features: [
       'Basic stock data access',
       'Daily market overview',
@@ -29,9 +30,10 @@ const pricingPlans = [
   },
   {
     name: 'Pro',
-    price: '₺299',
+    price: '$29',
     period: 'per month',
     description: 'Advanced analytics for serious investors',
+    paymentLink: 'https://nowpayments.io/payment/?iid=6146657761&source=button',
     features: [
       'Everything in Free',
       'AI-powered predictions',
@@ -47,9 +49,10 @@ const pricingPlans = [
   },
   {
     name: 'Ultimate',
-    price: '₺599',
+    price: '$49',
     period: 'per month',
     description: 'Complete market intelligence suite',
+    paymentLink: 'https://nowpayments.io/payment/?iid=4707645921&source=button',
     features: [
       'Everything in Pro',
       'AI Trader - Automated trading',
@@ -193,15 +196,33 @@ const Pricing = () => {
                   ))}
                 </ul>
 
-                <Button
-                  variant={plan.popular ? 'hero' : 'default'}
-                  size="lg"
-                  className="w-full"
-                  onClick={() => handlePlanSelect(plan.plan)}
-                  disabled={userPlan === plan.plan}
-                >
-                  {userPlan === plan.plan ? 'Current Plan' : plan.plan === 'free' ? plan.buttonText : 'Request Access'}
-                </Button>
+                {plan.plan === 'free' ? (
+                  <Button
+                    variant="default"
+                    size="lg"
+                    className="w-full"
+                    onClick={() => handlePlanSelect(plan.plan)}
+                    disabled={userPlan === plan.plan}
+                  >
+                    {userPlan === plan.plan ? 'Current Plan' : plan.buttonText}
+                  </Button>
+                ) : (
+                  <a
+                    href={plan.paymentLink}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="block w-full"
+                  >
+                    <Button
+                      variant={plan.popular ? 'hero' : 'default'}
+                      size="lg"
+                      className="w-full"
+                      disabled={userPlan === plan.plan}
+                    >
+                      {userPlan === plan.plan ? 'Current Plan' : 'Pay with Crypto'}
+                    </Button>
+                  </a>
+                )}
               </CardContent>
             </Card>
           ))}
